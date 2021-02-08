@@ -16,7 +16,7 @@ public class EmulatorController {
     @PostMapping(value = "/emul")
     public Object entry(@RequestParam("action") String action, @RequestParam(value = "service", required = false) String service, @RequestParam(value = "country", required = false) String country) {
         if (action.equals("getPrices")) {
-            return activationService.getPriceMap().getMapForResponse();
+            return activationService.getPriceMap(Country.getByVal(country)).getMapForResponse();
         }
         if (action.equals("getCurrentActivations")) {
             return activationService.getActivations();

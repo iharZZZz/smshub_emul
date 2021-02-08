@@ -20,6 +20,11 @@ public class PriceMap {
         map.get(country).get(service).put(cost, count);
     }
 
+    public void addServiceMap(Country country, Map<ServiceOfNumber, Map<BigDecimal, Integer>> serviceMap) {
+        map.computeIfAbsent(country, c -> new HashMap<>());
+        map.put(country, serviceMap);
+    }
+
     public Map<String, Map<String, Map<String, Integer>>> getMapForResponse() {
         Map<String, Map<String, Map<String, Integer>>> result = new HashMap<>();
         for (Country country : map.keySet()) {

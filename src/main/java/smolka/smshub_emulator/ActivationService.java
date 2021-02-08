@@ -103,7 +103,13 @@ public class ActivationService {
         return priceMap.getMap().get(country).get(service).get(cost) > 0;
     }
 
-    public PriceMap getPriceMap() {
+    public PriceMap getPriceMap(Country country) {
+        if (country != null) {
+            Map<ServiceOfNumber, Map<BigDecimal, Integer>> mapForCountry = priceMap.getMap().get(country);
+            PriceMap litePriceMap = new PriceMap();
+            litePriceMap.addServiceMap(country, mapForCountry);
+            return litePriceMap;
+        }
         return priceMap;
     }
 
