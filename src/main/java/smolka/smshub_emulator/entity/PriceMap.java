@@ -12,22 +12,30 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PriceMap {
-    private Map<ServiceOfNumber, PriceMapElemDto> map = new HashMap<>();
+    private Map<Country, Map<ServiceOfNumber, Map<BigDecimal, Integer>>> map = new HashMap<>();
 
-    public void addElem(ServiceOfNumber service, PriceMapElemDto priceMapElemDto) {
-        map.put(service, priceMapElemDto);
+    public void addElem(Country country, ServiceOfNumber service, BigDecimal cost, Integer count) {
+        map.computeIfAbsent(country, c -> new HashMap<>());
+        map.get(country).computeIfAbsent(service, s -> new HashMap<>());
+        map.get(country).get(service).put(cost, count);
     }
 
-    public Map<String, PriceMapElemDto> getMapForResponse() {
-        Map<String, PriceMapElemDto> result = new HashMap<>();
-        for (ServiceOfNumber service : map.keySet()) {
-            result.put(service.getName(), map.get(service));
+    public Map<String, Map<String, Map<String, Integer>>> getMapForResponse() {
+        Map<String, Map<String, Map<String, Integer>>> result = new HashMap<>();
+        for (Country country : map.keySet()) {
+            result.computeIfAbsent(country.getVal(), c -> new HashMap<>());
+            for (ServiceOfNumber service : map.get(country).keySet()) {
+                result.get(country.getVal()).computeIfAbsent(service.getName(), s -> new HashMap<>());
+                for (BigDecimal cost : map.get(country).get(service).keySet()) {
+                    result.get(country.getVal()).get(service.getName()).computeIfAbsent(cost.toString(), c -> 0);
+                    result.get(country.getVal()).get(service.getName()).put(cost.toString(), map.get(country).get(service).get(cost));
+                }
+            }
         }
         return result;
     }
 
-    public void sub(ServiceOfNumber service, BigDecimal cost, int s) {
-        PriceMapElemDto priceMapElemDto = map.get(service);
-        priceMapElemDto.getPriceMap().put(cost.toString(), priceMapElemDto.getPriceMap().get(cost.toString()) - s);
+    public void sub(Country country, ServiceOfNumber service, BigDecimal cost, int s) {
+        map.get(country).get(service).put(cost, map.get(country).get(service).get(cost) - s);
     }
 }

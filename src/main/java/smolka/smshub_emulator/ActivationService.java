@@ -55,16 +55,10 @@ public class ActivationService {
 
     private PriceMap createPriceMap() {
         PriceMap priceMap = new PriceMap();
-        for (ServiceOfNumber service : ServiceOfNumber.values()) {
-            Map<String, Integer> priceElem = new HashMap<>();
-            priceElem.put(this.price.toString(), countOfNumbers);
-            PriceMapElemDto priceMapElem = PriceMapElemDto.builder()
-                    .priceMap(priceElem)
-                    .maxPrice(price)
-                    .quantityForMaxPrice(countOfNumbers)
-                    .totalQuantity(countOfNumbers)
-                    .build();
-            priceMap.addElem(service, priceMapElem);
+        for (Country country : Country.values()) {
+            for (ServiceOfNumber service : ServiceOfNumber.values()) {
+                priceMap.addElem(country, service, price, countOfNumbers);
+            }
         }
         return priceMap;
     }
@@ -81,9 +75,9 @@ public class ActivationService {
         smsUpdater.start();
     }
 
-    public Object attemptToOrder(ServiceOfNumber service) {
-        if (isExists(service, price)) {
-            Activation activation = createActivation(service, price);
+    public Object attemptToOrder(Country country, ServiceOfNumber service) {
+        if (isExists(country, service, price)) {
+            Activation activation = createActivation(country, service, price);
             return ActivationInfo.builder()
                     .id(activation.getId())
                     .number(activation.getPhone())
@@ -105,15 +99,15 @@ public class ActivationService {
                 .build();
     }
 
-    public boolean isExists(ServiceOfNumber service, BigDecimal cost) {
-        return priceMap.getMap().get(service).getPriceMap().get(cost.toString()) > 0;
+    public boolean isExists(Country country, ServiceOfNumber service, BigDecimal cost) {
+        return priceMap.getMap().get(country).get(service).get(cost) > 0;
     }
 
     public PriceMap getPriceMap() {
         return priceMap;
     }
 
-    private synchronized Activation createActivation(ServiceOfNumber service, BigDecimal cost) {
+    private synchronized Activation createActivation(Country country, ServiceOfNumber service, BigDecimal cost) {
         int max = activations.stream().mapToInt(Activation::getId).max().orElse(-1);
         max = max + 1;
         Activation activation = Activation.builder()
@@ -124,7 +118,7 @@ public class ActivationService {
                 .status(2)
                 .createDate(LocalDateTime.now())
                 .build();
-        priceMap.sub(service, cost, 1);
+        priceMap.sub(country, service, cost, 1);
         activations.add(activation);
         return activation;
     }
